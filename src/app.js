@@ -6,23 +6,48 @@ const app=express()
 app.use(express.json())
 
 
- app.post("/signup", async (req, res)=>{
+app.post("/signup", async (req, res) => {
 
     console.log(req.body);
-
-    // const userObj ={
-    //     firstName:"Ram",
-    //     lastName:"Singh",
-    //     emailId:"rsingh@gmail.com",
-    //     password:"1234@aa"
-
-    // }
-
     // Create a new user instance
-    const newUser= new UserModel(req.body)
-     await newUser.save()
-     res.send("User created successfully");
- })
+    const newUser = new UserModel(req.body)
+    await newUser.save()
+    res.send("User created successfully");
+})
+
+app.get("/finduserwithemail", async (req, res) => {
+    const emailId = req.body.emailId
+    const user = await UserModel.find({ emailId: emailId })
+    if (user.length === 0) {
+        res.status(404).send("No user found with this email")
+    }
+    else {
+        res.send(user)
+
+    }
+
+})
+
+app.get("/findoneuserwithemail", async(req, res)=>{
+    const useremail=req.body.emailId
+    
+    try {
+        const firstuser = await UserModel.findOne({ emailId: useremail })
+        res.status(200).send(firstuser)
+    }
+    catch (error) {
+        res.status(404).send("No user found with this email")
+    }
+
+
+
+})
+
+app.get("/feed", async (req, res) => {
+    const allusers = await UserModel.find({})
+    res.send(allusers)
+
+})
 
 ConnectDB().then(()=>{
  console.log("Database connected successfully");
