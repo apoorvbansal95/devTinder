@@ -1,11 +1,10 @@
-const express=require('express');
-const UserModel=require('./models/user')
-const ConnectDB=require('./config/database')
-const app=express()
-
+const express = require('express');
+const UserModel = require('./models/user')
+const ConnectDB = require('./config/database')
+const app = express()
 app.use(express.json())
 
-
+//*************************************************************************//
 app.post("/signup", async (req, res) => {
 
     console.log(req.body);
@@ -28,9 +27,9 @@ app.get("/finduserwithemail", async (req, res) => {
 
 })
 
-app.get("/findoneuserwithemail", async(req, res)=>{
-    const useremail=req.body.emailId
-    
+app.get("/findoneuserwithemail", async (req, res) => {
+    const useremail = req.body.emailId
+
     try {
         const firstuser = await UserModel.findOne({ emailId: useremail })
         res.status(200).send(firstuser)
@@ -49,12 +48,40 @@ app.get("/feed", async (req, res) => {
 
 })
 
-ConnectDB().then(()=>{
- console.log("Database connected successfully");
- app.listen(3000 ,()=>{
-    console.log('Server is running on port 3000');
+app.delete("/deleteuser", async (req, res) => {
+    const userId = req.body._id
+    try {
+
+        const deletedUser = await UserModel.findByIdAndDelete({ _id: userId })
+        res.status(200).send("User deleted succsesfully")
+    }
+    catch (err) {
+        console.log(err)
+    }
 })
-}).catch((err)=>{
- console.log("Database connection failed", err);
+
+app.patch("/updateuser", async (req, res) => {
+ const userId= req.body._id
+ const updateddata= req.body
+try{
+    console.log(updateddata)
+    const updateduser= await UserModel.findByIdAndUpdate(userId, updateddata)
+    res.status(200).send("User updated successfully")
+}
+catch(err){
+    console.log(err)
+}
+})
+
+
+//*************************************************************************//
+
+ConnectDB().then(() => {
+    console.log("Database connected successfully");
+    app.listen(3000, () => {
+        console.log('Server is running on port 3000');
+    })
+}).catch((err) => {
+    console.log("Database connection failed", err);
 })
 
