@@ -63,7 +63,19 @@ app.delete("/deleteuser", async (req, res) => {
 app.patch("/updateuser", async (req, res) => {
  const userId= req.body._id
  const updateddata= req.body
-try{
+
+
+    try {
+        const Allowed_updates = ["about", "age"]
+
+        const isupdateallowed = Object.keys(updateddata).every((k) => {       // we will check for every data in patch request that it is present in allowed updates or not
+            Allowed_updates.includes(k)                                     // i fnot return error
+        })
+
+        if (!isupdateallowed) {
+            throw new Error("Invalid updates!")
+        }
+
     console.log(updateddata)
     const updateduser= await UserModel.findByIdAndUpdate(userId, updateddata)
     res.status(200).send("User updated successfully")
