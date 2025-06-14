@@ -9,28 +9,28 @@ app.use(express.json())
 //*************************************************************************//
 app.post("/signup", async (req, res) => {
 
-    try{
-    console.log(req.body);
-    
-    //validate the data first
-    ValidateSignupData(req)
+    try {
+        console.log(req.body);
+
+        //validate the data first
+        ValidateSignupData(req)
         const { firstName, lastName, emailId, password } = req.body
-    // encrypt the password
-    const hashpassword = await bcrypt.hash(password, 10 )
-    console.log(hashpassword)    
+        // encrypt the password
+        const hashpassword = await bcrypt.hash(password, 10)
+        console.log(hashpassword)
 
 
-    // Create a new user instance
-    const newUser = new UserModel({
-        firstName,
-        lastName,
-        emailId, 
-        password: hashpassword,
-    })
-    await newUser.save()
-    res.send("User created successfully");
+        // Create a new user instance
+        const newUser = new UserModel({
+            firstName,
+            lastName,
+            emailId,
+            password: hashpassword,
+        })
+        await newUser.save()
+        res.send("User created successfully");
     }
-    catch(err){
+    catch (err) {
         console.log(err)
         res.status(400).send(err.message)
     }
@@ -107,6 +107,26 @@ catch(err){
 }
 })
 
+app.post("/login", async(req, res)=>{
+    try{
+        const {emailId, password}= req.body
+        const validuser= await UserModel.findOne({emailId:emailId})
+
+        if (!validuser){
+            throw new Error ("No user find with this email ID")
+        }
+
+        const ispasswordcorrect= await bcrypt.compare(password, validuser.password)
+        if (!ispasswordcorrect){
+            throw new Error("Wrong password entered")
+        }
+        res.status(200).send("Login successful")
+
+    }
+    catch(err){
+        res.status(400).send(err.message)
+    }
+})
 
 //*************************************************************************//
 
