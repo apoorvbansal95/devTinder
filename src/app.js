@@ -4,7 +4,10 @@ const ConnectDB = require('./config/database')
 const { ValidateSignupData } = require('./utils/validation')
 const bcrypt = require('bcrypt')
 const app = express()
+const cookieParser = require('cookie-parser')
+const jwt = require('jsonwebtoken')
 app.use(express.json())
+app.use(cookieParser())
 
 //*************************************************************************//
 app.post("/signup", async (req, res) => {
@@ -83,8 +86,8 @@ app.delete("/deleteuser", async (req, res) => {
 })
 
 app.patch("/updateuser", async (req, res) => {
- const userId= req.body._id
- const updateddata= req.body
+    const userId = req.body._id
+    const updateddata = req.body
 
 
     try {
@@ -98,36 +101,62 @@ app.patch("/updateuser", async (req, res) => {
             throw new Error("Invalid updates!")
         }
 
-    console.log(updateddata)
-    const updateduser= await UserModel.findByIdAndUpdate(userId, updateddata)
-    res.status(200).send("User updated successfully")
-}
-catch(err){
-    console.log(err)
-}
+        console.log(updateddata)
+        const updateduser = await UserModel.findByIdAndUpdate(userId, updateddata)
+        res.status(200).send("User updated successfully")
+    }
+    catch (err) {
+        console.log(err)
+    }
 })
 
-app.post("/login", async(req, res)=>{
-    try{
-        const {emailId, password}= req.body
-        const validuser= await UserModel.findOne({emailId:emailId})
+app.post("/login", async (req, res) => {
+    try {
+        const { emailId, password } = req.body
+        const validuser = await UserModel.findOne({ emailId: emailId })
 
-        if (!validuser){
-            throw new Error ("No user find with this email ID")
+        if (!validuser) {
+            throw new Error("No user find with this email ID")
         }
 
-        const ispasswordcorrect= await bcrypt.compare(password, validuser.password)
-        if (!ispasswordcorrect){
+        const ispasswordcorrect = await bcrypt.compare(password, validuser.password)
+        if (!ispasswordcorrect) {
+
             throw new Error("Wrong password entered")
         }
+        // Create a JWT token 
+        const token = await jwt.sign({_id:validuser._id}, "DEV@Tinder987")
+        console.log(token)
+
+
+
+        // add token to cookie and send back to user
+        res.cookie("token", token)
         res.status(200).send("Login successful")
 
     }
-    catch(err){
+    catch (err) {
         res.status(400).send(err.message)
     }
 })
 
+app.get("/profile", async (req, res) => {
+    const cookie = req.cookies
+
+    const{token}= cookie
+
+    //validate my token 
+    const decodedmessage= await jwt.verify(token, "DEV@Tinder987")
+
+    console.log(decodedmessage)
+    //  if (!istokenvalid){
+    //     throw new error("please login again")
+    //  }
+
+    // if valid the send the response back
+    console.log(cookie)
+    res.send("reading cookies")
+})
 //*************************************************************************//
 
 ConnectDB().then(() => {
