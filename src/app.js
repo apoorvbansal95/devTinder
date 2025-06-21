@@ -120,13 +120,13 @@ app.post("/login", async (req, res) => {
             throw new Error("No user find with this email ID")
         }
 
-        const ispasswordcorrect = await bcrypt.compare(password, validuser.password)
+        const ispasswordcorrect = await validuser.validatePassword(password) // this method is defined in user model
         if (!ispasswordcorrect) {
 
             throw new Error("Wrong password entered")
         }
         // Create a JWT token 
-        const token = await jwt.sign({ _id: validuser._id }, "DEV@Tinder987")
+        const token = await validuser.getJWT()  // this method is defined in user model 
         console.log(token)
 
 
@@ -143,39 +143,17 @@ app.post("/login", async (req, res) => {
 
 app.get("/profile", userAuth, async (req, res) => {
     try {
-        const cookie = req.cookies
-
-        const { token } = cookie
-
-        if (!token) {
-            throw new Error("Invalid token")
-        }
-
-        //validate my token 
-        const decodedmessage = await jwt.verify(token, "DEV@Tinder987")
-
-        console.log(decodedmessage)
-        const { _id } = decodedmessage
-        console.log("Logged in user is " + _id)
-
-        const loggedinuser = await UserModel.findById(_id)
-        if (!loggedinuser) {
-            throw new Error("No user found with this ID")
-        }
-
+        const loggedinuser = req.user
         res.status(200).send(loggedinuser)
-
-        //  if (!istokenvalid){
-        //     throw new error("please login again")
-        //  }
-
-        // if valid the send the response back
-        // console.log(cookie)
-        // res.send("reading cookies")
     } catch (err) {
         res.status(400).send(err.message)
     }
 
+})
+
+app.post("/sendconnectionrequest", userAuth, async (req, res) => {
+    // logic to send connection request
+    res.send("connection request send")
 })
 //*************************************************************************//
 
