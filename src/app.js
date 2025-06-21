@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt')
 const app = express()
 const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
+const { userAuth } = require('./middlewares/auth')
 app.use(express.json())
 app.use(cookieParser())
 
@@ -125,7 +126,7 @@ app.post("/login", async (req, res) => {
             throw new Error("Wrong password entered")
         }
         // Create a JWT token 
-        const token = await jwt.sign({_id:validuser._id}, "DEV@Tinder987")
+        const token = await jwt.sign({ _id: validuser._id }, "DEV@Tinder987")
         console.log(token)
 
 
@@ -140,22 +141,41 @@ app.post("/login", async (req, res) => {
     }
 })
 
-app.get("/profile", async (req, res) => {
-    const cookie = req.cookies
+app.get("/profile", userAuth, async (req, res) => {
+    try {
+        const cookie = req.cookies
 
-    const{token}= cookie
+        const { token } = cookie
 
-    //validate my token 
-    const decodedmessage= await jwt.verify(token, "DEV@Tinder987")
+        if (!token) {
+            throw new Error("Invalid token")
+        }
 
-    console.log(decodedmessage)
-    //  if (!istokenvalid){
-    //     throw new error("please login again")
-    //  }
+        //validate my token 
+        const decodedmessage = await jwt.verify(token, "DEV@Tinder987")
 
-    // if valid the send the response back
-    console.log(cookie)
-    res.send("reading cookies")
+        console.log(decodedmessage)
+        const { _id } = decodedmessage
+        console.log("Logged in user is " + _id)
+
+        const loggedinuser = await UserModel.findById(_id)
+        if (!loggedinuser) {
+            throw new Error("No user found with this ID")
+        }
+
+        res.status(200).send(loggedinuser)
+
+        //  if (!istokenvalid){
+        //     throw new error("please login again")
+        //  }
+
+        // if valid the send the response back
+        // console.log(cookie)
+        // res.send("reading cookies")
+    } catch (err) {
+        res.status(400).send(err.message)
+    }
+
 })
 //*************************************************************************//
 
