@@ -36,7 +36,8 @@ const userSchema = mongoose.Schema({
         }
     },
     about: {
-        type: String
+        type: String, 
+        maxLength: 100
     },
     age: {
         type: Number,
