@@ -1,4 +1,6 @@
 const validator = require('validator');
+
+//*************************************************************************//
 const ValidateSignupData=(req)=>{
     const {firstName , lastName , emailId, password}= req.body
 
@@ -25,4 +27,6 @@ const validateEditprofiledata= (req)=>{
     )
     return isAllowed
 }
+
+//*************************************************************************//
 module.exports={ValidateSignupData, validateEditprofiledata}
