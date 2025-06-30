@@ -41,14 +41,14 @@ userRouter.get("/user/requests/friends", userAuth, async (req, res) => {
             ]
         }).populate("fromUserId", ["firstName", "lastName", "age", "about"]).populate("fromUserId", ["firstName", "lastName", "age", "about"])  // populate using ref
 
-        const data = acceptedconnectionsRequest.map((row) => 
-            {if (row.fromUserId._id.toString()===loggedinuser._id.toString()){
+        const data = acceptedconnectionsRequest.map((row) => {
+            if (row.fromUserId._id.toString() === loggedinuser._id.toString()) {
                 return row.toUserId
             }
-            else{
-               return  row.fromUserId
+            else {
+                return row.fromUserId
             }
-                })
+        })
         res.json({
             message: "Data fetch succesfully",
             data: data
@@ -60,6 +60,37 @@ userRouter.get("/user/requests/friends", userAuth, async (req, res) => {
     }
 })
 
+userRouter.get("/user/feed", userAuth, async (req, res) => {
+    try {
+
+        //avoid cards for user A
+        // -> his own card
+        // -> his friends/connections [accepted]
+        //-> his ignored cards [ he rejected]
+        // -> people he send connection requests to  ---> // people who rejected him
+
+        const loggedinuser = req.user
+
+        // find all connection requests for which A is from or to 
+        const allconnectionrequests = await ConnectRequestModel.find({
+            $or: [{ toUserId: loggedinuser._id }, { fromUserId: loggedinuser._id }]
+        }).select("fromUserId toUserId")
+
+        const hideUsers = new Set()
+        allconnectionrequests.map((req) => {
+            hideUsers.add(req.fromUserId.toString())
+            hideUsers.add(req.toUserId.toString())
+        })
+        console.log(hideUsers)
+        const feedusers = await userModel.find({
+           $and:[{ _id: { $nin: Array.from(hideUsers) }}, {_id:{$ne:loggedinuser._id}}]
+        }).select("firstName lastName age gender about")
+        res.send(feedusers)
+    }
+    catch (err) {
+        res.status(400).send(err)
+    }
+})
 //*************************************************************************//
 
 module.exports=userRouter
