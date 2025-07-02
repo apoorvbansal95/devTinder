@@ -70,7 +70,12 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
         // -> people he send connection requests to  ---> // people who rejected him
 
         const loggedinuser = req.user
-
+        const page = parseInt(req.query.page) || 1
+        let limit = parseInt(req.query.limit) || 10
+        limit =limit>50?50:limit
+        const skip = (page - 1) * limit                                 // feed?page=2&limit=10    =>11-20
+        console.log(skip)                                           // feed?page=3&limit=10    =>21-30
+                                                                     // feed?page=4&limit=10    =>31-40
         // find all connection requests for which A is from or to 
         const allconnectionrequests = await ConnectRequestModel.find({
             $or: [{ toUserId: loggedinuser._id }, { fromUserId: loggedinuser._id }]
@@ -83,8 +88,8 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
         })
         console.log(hideUsers)
         const feedusers = await userModel.find({
-           $and:[{ _id: { $nin: Array.from(hideUsers) }}, {_id:{$ne:loggedinuser._id}}]
-        }).select("firstName lastName age gender about")
+            $and: [{ _id: { $nin: Array.from(hideUsers) } }, { _id: { $ne: loggedinuser._id } }]
+        }).select("firstName lastName age gender about").skip(skip).limit(limit)
         res.send(feedusers)
     }
     catch (err) {
