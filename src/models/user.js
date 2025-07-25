@@ -43,6 +43,13 @@ const userSchema = mongoose.Schema({
     age: {
         type: Number,
         min: 1
+    }, 
+    photo:{
+        type: String,
+    },
+    skills: {
+        type: [String], // Array of skills as strings
+        default: []
     }
 
 }, {

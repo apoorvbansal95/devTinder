@@ -15,7 +15,7 @@ userRouter.get("/user/requests/recieved", userAuth, async (req, res) => {
         const incomingconnectionsRequest = await ConnectRequestModel.find({
             toUserId: loggedinuser._id,
             status: "interested"
-        }).populate("fromUserId", ["firstName", "lastName", "age", "about"])    // populate using ref
+        }).populate("fromUserId", ["firstName", "lastName", "age", "about", "photo"])    // populate using ref
 
         res.json({
             message: "Data fetch succesfully",
@@ -37,9 +37,9 @@ userRouter.get("/user/requests/friends", userAuth, async (req, res) => {
         const acceptedconnectionsRequest = await ConnectRequestModel.find({
             $or: [
                 { toUserId: loggedinuser._id, status: "accepted" },
-                { fromUserIdUserId: loggedinuser._id, status: "accepted" },
+                { fromUserId: loggedinuser._id, status: "accepted" },
             ]
-        }).populate("fromUserId", ["firstName", "lastName", "age", "about"]).populate("fromUserId", ["firstName", "lastName", "age", "about"])  // populate using ref
+        }).populate("fromUserId", ["firstName", "lastName", "age", "about", "photo"]).populate("toUserId", ["firstName", "lastName", "age", "about", "photo"])  // populate using ref
 
         const data = acceptedconnectionsRequest.map((row) => {
             if (row.fromUserId._id.toString() === loggedinuser._id.toString()) {
@@ -89,7 +89,7 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
         console.log(hideUsers)
         const feedusers = await userModel.find({
             $and: [{ _id: { $nin: Array.from(hideUsers) } }, { _id: { $ne: loggedinuser._id } }]
-        }).select("firstName lastName age gender about").skip(skip).limit(limit)
+        }).select("firstName lastName age gender about photo skills").skip(skip).limit(limit)
         res.send(feedusers)
     }
     catch (err) {
